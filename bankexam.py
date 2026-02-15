@@ -101,7 +101,8 @@ def handle_submit(choice, final_time):
         'min_time': q.get('minimum_time', 5),
         'is_overtime': is_overtime,
         'is_guess': is_guess,
-        'error_tag': error_tag
+        'error_tag': error_tag,
+        'chapter' : q['Chapter']
     })
 
     st.session_state.answered.append(q['question_id'])
@@ -159,7 +160,7 @@ elif not st.session_state.test_complete:
     st.divider()
     st.write(f"#### {q['question']}")
 
-    for char in ['A', 'B', 'C', 'D']:
+    for char in ['A', 'B', 'C', 'D','E']:
         if st.button(f"{char}: {q[f'option_{char.lower()}']}", use_container_width=True):
             final_duration = round(time.time() - st.session_state.start_time, 1)
             handle_submit(char, final_duration)
@@ -194,7 +195,7 @@ else:
         "Advanced (>1)":      {"correct": 0, "wrong": 0, "time_c": 0.0, "time_w": 0.0, "ovr": 0, "guesses": 0}
     }
     for res in st.session_state.results_history:
-        cat = "Foundational (<-1)" if res['diff'] < -1.0 else "Advanced (>1)" if res['diff'] > 1.0 else "Intermediate (±1)"
+        cat = "Foundational (<-1)" if res['diff'] < 0.0 else "Advanced (>1)" if res['diff'] > 1.0 else "Intermediate (±1)"
         if res['is_correct']:
             stats[cat]["correct"] += 1
             stats[cat]["time_c"] += res['time']
@@ -229,11 +230,12 @@ else:
         show_acc = (res['is_correct'] and f_correct) or (not res['is_correct'] and f_wrong)
         show_time = (not f_overtime) or res['is_overtime']
         show_gs = (not f_guess) or res['is_guess']
+        show_diff = "Foundational (<-1)" if res['diff'] < -1.0 else "Advanced (>1)" if res['diff'] > 1.0 else "Intermediate (±1)"
         
-        if show_acc and show_time and show_gs:
+        if show_acc and show_time and show_gs :
             color = "green" if res['is_correct'] else "red"
             status = "✅" if res['is_correct'] else "❌"
-            with st.expander(f"{status} Q#{res['num']} | Time: {res['time']}s | {res['error_tag']}"):
+            with st.expander(f"{status} Q#{res['num']} | Time: {res['time']}s | {res['error_tag']} | Difficulty level: {show_diff} | Chapter: {res['chapter']}"):
                 st.write(f"**Question:** {res['full_question']}")
                 st.markdown(f"**User Ans:** :{color}[{res['user_val']}] | **Correct:** {res['correct_val']}")
                 if res['is_overtime']: st.warning("Note: Overtime response.")
